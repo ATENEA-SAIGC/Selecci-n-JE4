@@ -8,10 +8,6 @@
 
 <br>
 
-| <img src="https://www.agenciaatenea.gov.co/sites/default/files/inline-images/atenea520.png" alt="Logo Atenea" width="300"> |----------------------------------------------------------------------<br> **Código Publicado** <br> ----------------------------------------------------------------------| **Año:** 2025<br> **SAIGC** <br> *Subgerencia de Análisis de Información*<br>*y Gestión del Conocimiento* |
-| :---: |:-----------------------: | ----------------: |
-
-
 
 ## Descripción
 
