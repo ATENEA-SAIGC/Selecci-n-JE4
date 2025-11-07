@@ -1,4 +1,4 @@
-# Proyecto JE4: Mecanismo de Selección de Ofertas
+# Proyecto JE4: Mecanismo de Selección y Aprobación de las Ofertas Académicas de las IES
 
 <p align="center">
   <img src="https://img.shields.io/badge/Hecho%20con-R-276DC3.svg?style=for-the-badge&logo=R&logoColor=white" alt="Hecho con R">
@@ -8,124 +8,146 @@
 
 <br>
 
-
 ## Descripción
 
-Este repositorio contiene el script de R (`JE4_Calculo_Ofertas_VF.R`) para el **Proyecto JE4**. El objetivo de este script es implementar el mecanismo de selección y aprobación de ofertas técnicas, asignando cupos (plazas) a programas académicos de Instituciones de Educación Superior (IES).
+Este repositorio contiene el script en R (`JE4_Calculo_Ofertas_VF.R`) correspondiente al **Proyecto JE4**, cuyo objetivo es implementar el mecanismo de selección y aprobación de ofertas técnicas, asignando cupos (plazas) a programas académicos de Instituciones de Educación Superior (IES).
 
-El algoritmo asigna cupos basado en un presupuesto general, un conjunto de reglas de negocio complejas, y dos componentes principales de asignación:
+El algoritmo distribuye los cupos a partir de un presupuesto general y un conjunto de reglas de negocio que se estructuran en dos componentes principales:
 
-1.  **Mecanismo ISOES (90% del presupuesto):** Asigna recursos priorizando el *Índice de Sostenibilidad de la Oferta de Educación Superior* (ISOES) y la *Tasa Interna de Retorno* (TIR) de los programas.
-2.  **Componente de Demanda Social (10% del presupuesto):** Asigna recursos a programas con alta demanda histórica que no recibieron cupos (o recibieron muy pocos) en el primer componente.
+1. **Mecanismo ISOES (90% del presupuesto):** Asigna recursos priorizando el *Índice de Sostenibilidad de la Oferta de Educación Superior* (ISOES) y la *Tasa Interna de Retorno* (TIR) de los programas.  
+2. **Componente de Demanda Social (10% del presupuesto):** Asigna recursos a programas con alta demanda histórica que no obtuvieron cupos (o recibieron muy pocos) en el componente anterior.
+
+---
 
 ## Flujo del Proceso
 
-El script ejecuta una serie de pasos secuenciales para calcular los costos, distribuir el presupuesto y asignar los cupos.
+El script ejecuta una serie de pasos secuenciales para calcular los costos, distribuir el presupuesto y asignar los cupos de manera reproducible.
 
-### 1\. Cálculo de Costos Anuales
+### 1. Cálculo de Costos Anuales
 
-  * **Preparación de Datos:** Carga las ofertas (`LISTADO_OFERTA_PROPUESTA`) y filtra los programas habilitados.
-  * **Pivote de Semestres:** Transforma los costos de los 14 semestres (de formato ancho a largo).
-  * **Cálculo de Pagos:** Modela un calendario de pagos complejo donde:
-      * Los semestres impares tienen un solo pago (`Pago1` = 100%).
-      * Los semestres pares tienen dos pagos: 80% en el período actual (`Pago1`) y 20% en el período siguiente (`Pago2`).
-  * **Costos Anuales:** Agrupa estos pagos por año de ejecución para crear el costo anualizado por programa (`OFERTA_COSTO_EJECUCION_ANUAL`).
+* **Preparación de Datos:** Carga las ofertas (`LISTADO_OFERTA_PROPUESTA`) y filtra los programas habilitados.  
+* **Pivote de Semestres:** Convierte los costos de los 14 semestres de formato ancho a largo.  
+* **Cálculo de Pagos:** Modela un calendario de pagos donde:  
+  * Los semestres impares tienen un solo pago (`Pago1` = 100%).  
+  * Los semestres pares tienen dos pagos: 80% en el período actual (`Pago1`) y 20% en el siguiente (`Pago2`).  
+* **Costos Anuales:** Agrupa los pagos por año de ejecución para calcular el costo anualizado de cada programa (`OFERTA_COSTO_EJECUCION_ANUAL`).
 
-### 2\. Mecanismo ISOES (Paso 1, 2 y 3)
+---
 
-Este mecanismo distribuye el 90% del presupuesto general (`PPTO_MecanismoActual`).
+### 2. Mecanismo ISOES (Paso 1, 2 y 3)
 
-  * **Paso 0: Distribución del Presupuesto:**
+Este componente distribuye el 90% del presupuesto general (`PPTO_MecanismoActual`).
 
-      * El presupuesto del mecanismo se divide en `PPTO_UNIV` (95%) y `PPTO_TYT` (5%) para programas Universitarios y Técnicos/Tecnológicos, respectivamente.
+#### Paso 0: Distribución del Presupuesto
 
-  * **Paso 1: Asignación de Bolsa de Recursos por IES:**
+* El presupuesto del mecanismo se divide en `PPTO_UNIV` (95%) y `PPTO_TYT` (5%) para programas Universitarios y Técnicos/Tecnológicos, respectivamente.
 
-      * Calcula una **TIR promedio ponderada** por IES y Nivel.
-      * Las IES con una TIR ponderada negativa son excluidas (asignación de cero).
-      * Distribuye el presupuesto (`PPTO_UNIV` y `PPTO_TYT`) entre las IES elegibles.
+#### Paso 1: Asignación de Bolsa de Recursos por IES
 
-  * **Paso 2: Asignación de Cupos dentro de la IES:**
+* Calcula la **TIR promedio ponderada** por IES y Nivel.  
+* Las IES con TIR ponderada negativa son excluidas del proceso.  
+* Distribuye el presupuesto (`PPTO_UNIV` y `PPTO_TYT`) entre las IES elegibles.
 
-      * **Ordenamiento:** Los programas de cada IES se ordenan con los siguientes criterios de prioridad:
-        1.  Mayor `ISOES_PROGRAMA` (descendente).
-        2.  Menor `TOTAL_VALOR_COHORTE_ATENEA` (ascendente).
-        3.  Mayor `CUPOS_SEGÚN_CAPACIDAD` (descendente).
-        4.  Semilla aleatoria (`set.seed(20251010)`) para desempates finales.
-      * **Iteración:** El script recorre cada programa en orden y le asigna cupos (`CUPO_ASIGNADO_IES`) mientras tenga presupuesto en su bolsa de IES y haya presupuesto en la bolsa general anual (`BASE_ANUAL`).
+#### Paso 2: Asignación de Cupos dentro de la IES
 
-  * **Paso 3: Asignación del Excedente (Bolsa Común por Nivel):**
+* **Ordenamiento:** Los programas se ordenan dentro de cada IES según:  
+  1. Mayor `ISOES_PROGRAMA` (descendente).  
+  2. Menor `TOTAL_VALOR_COHORTE_ATENEA` (ascendente).  
+  3. Mayor `CUPOS_SEGÚN_CAPACIDAD` (descendente).  
+  4. Semilla aleatoria (`set.seed(20251010)`) para desempates.  
+* **Iteración:** El script recorre los programas asignando cupos (`CUPO_ASIGNADO_IES`) mientras exista disponibilidad en la bolsa de la IES y en la bolsa anual (`BASE_ANUAL`).
 
-      * El presupuesto sobrante (`VALOR_SOBRANTE_IES_NIVEL`) de todas las IES se agrupa en una bolsa común por Nivel (TYT y UNIVERSITARIO).
-      * Se vuelve a recorrer la lista de programas (en el mismo orden) para asignar cupos adicionales (`CUPO_ASIGNADO_NIVEL`) a aquellos que aún tengan `CUPO_PENDIENTES`.
+#### Paso 3: Asignación del Excedente (Bolsa Común por Nivel)
 
-### 3\. Componente de Demanda Social
+* El presupuesto sobrante (`VALOR_SOBRANTE_IES_NIVEL`) se agrupa en una bolsa común por Nivel (TYT y UNIVERSITARIO).  
+* **Cálculo de cupos pendientes:** Se calcula `CUPO_PENDIENTES`, definido como la diferencia entre `CUPOS_SEGÚN_CAPACIDAD` y `CUPO_ASIGNADO_NIVEL`.  
+* Luego se recorre nuevamente la lista de programas (en el mismo orden) para asignar cupos adicionales (`CUPO_ASIGNADO_NIVEL`) a aquellos con `CUPO_PENDIENTES` aún disponibles.
 
-Este mecanismo distribuye el 10% del presupuesto inicial (`PPTO_DemandaSocial`) más el excedente final del Mecanismo ISOES.
+---
 
-  * **Filtrado de Programas:** Se seleccionan programas que cumplen todas estas condiciones:
+### 3. Componente de Demanda Social
 
-      * Recibieron menos de 6 cupos en el paso anterior.
-      * Aún tienen cupos pendientes (`CUPO_PENDIENTES > 0`).
-      * Tienen datos de demanda social histórica (`DH_INDICADOR_DEMANDA_SOCIAL`).
-      * Están por encima del percentil 50 en demanda (`DH_PERCENTIL_50_(POR_ENCIMA_/_POR_DEBAJO)`).
+Este componente distribuye el 10% del presupuesto inicial (`PPTO_DemandaSocial`), más el excedente final del Mecanismo ISOES.
 
-  * **Asignación (similar al Paso 2 y 3):**
+#### Filtrado de Programas
 
-      * El presupuesto se distribuye primero en bolsas por **CINE y Nivel** (basado en inscritos históricos).
-      * Se asignan cupos (`CUPO_ASIGNADO_CINE`) recorriendo los programas elegibles.
-      * El excedente de esta asignación se agrupa en una bolsa común por Nivel y se repite el proceso para asignar los últimos cupos (`CUPO_ASIGNADO_NIVEL_DH`).
+Se seleccionan los programas que cumplen todas las condiciones siguientes:
 
-### 4\. Resultados
+* Recibieron menos de **6 cupos en el paso anterior**, agrupado por `CINE` y `NIVEL`.  
+* Aún tienen cupos pendientes (`CUPO_PENDIENTES > 0`), tras un **recalculo** de la variable con base en `CUPOS_SEGÚN_CAPACIDAD` y `CUPOS_ASIGNADOS_MECANISMO_ISOES`.  
+* Tienen datos de demanda social histórica (`DH_INDICADOR_DEMANDA_SOCIAL`).  
+* Se ubican por encima del percentil 50 en demanda (`DH_PERCENTIL_50_(POR_ENCIMA_/_POR_DEBAJO)`).
 
-  * **Consolidación:** Se genera un data frame final (`RESULT`) que contiene el total de cupos asignados por programa.
-  * **Exportación:** Los resultados se guardan en un archivo Excel (`.xlsx`) con varias hojas:
-      * `JE4_PROGRAMAS`: El resultado principal de asignación por programa.
-      * `EXCEDENTES_NIVEL`: Los montos sobrantes finales.
-      * `BOLSA_ANUAL`: El estado final de la bolsa de presupuesto anual.
-      * `IES`: Los cálculos de la bolsa por IES (Paso 1).
-      * `CINE`: Los cálculos de la bolsa por CINE (Componente Demanda Social).
+#### Asignación (similar al Paso 2 y 3)
+
+* El presupuesto se distribuye inicialmente en bolsas por **CINE y Nivel** (según inscritos históricos).  
+* Se asignan cupos (`CUPO_ASIGNADO_CINE`) a los programas elegibles.  
+* El excedente se agrupa en una **bolsa común por Nivel** y se repite el proceso para asignar los cupos restantes (`CUPO_ASIGNADO_NIVEL_DH`).
+
+---
+
+### 4. Resultados
+
+* **Consolidación:** Se genera el `data frame` final (`RESULT`) con el total de cupos asignados por programa.  
+* **Exportación:** Los resultados se guardan en un archivo Excel (`.xlsx`) con las siguientes hojas:
+  * `JE4_PROGRAMAS`: Resultado principal de asignación por programa.  
+  * `EXCEDENTES_NIVEL`: Montos sobrantes finales.  
+  * `BOLSA_ANUAL`: Estado final de la bolsa anual de presupuesto.  
+  * `IES`: Cálculos de la bolsa por IES (Paso 1).  
+  * `CINE`: Cálculos de la bolsa por CINE (Componente Demanda Social).
+
+---
 
 ## Requisitos
 
 ### Dependencias de R
 
-El script requiere las siguientes bibliotecas de R:
+El script requiere las siguientes bibliotecas:
 
-  * `sqldf`
-  * `expss`
-  * `readr`
-  * `readxl`
-  * `dplyr`
-  * `tidyr`
-  * `eeptools`
-  * `openxlsx`
+```r
+sqldf
+expss
+readr
+readxl
+dplyr
+tidyr
+eeptools
+openxlsx
 
-### Archivos de Entrada
+Archivos de Entrada
 
-El script depende de un único archivo de entrada que debe estar en el directorio de trabajo:
+El script depende de un único archivo de entrada en el directorio de trabajo:
 
-  * `JE4_Insumo_Oferta.RData`
+JE4_Insumo_Oferta.RData
 
-Este archivo RData debe contener, como mínimo, los siguientes objetos:
 
-  * `LISTADO_OFERTA_PROPUESTA`: Data frame principal con las ofertas de programas de las IES.
-  * `DemandaHistorica`: Data frame con datos históricos de demanda (inscritos, cupos, etc.) por CINE y Nivel.
-  * `BASE_ANUAL`: Data frame con el presupuesto disponible por año (columna `Escenario 1`).
+Este archivo debe incluir, como mínimo:
 
-## Cómo Ejecutar
+LISTADO_OFERTA_PROPUESTA: Ofertas académicas propuestas por las IES.
 
-1.  Asegúrese de tener todas las bibliotecas de R listadas anteriormente instaladas.
+DemandaHistorica: Datos históricos de demanda (inscritos, cupos, etc.) por CINE y Nivel.
 
-2.  Coloque el script `JE4_Calculo_Ofertas_VF.R` y el archivo `JE4_Insumo_Oferta.RData` en el mismo directorio.
+BASE_ANUAL: Presupuesto disponible por año (columna Escenario 1).
 
-3.  Actualice la ruta de trabajo en el script R, modificando la línea `setwd(...)`:
 
-    ```r
-    # UBICAR LA CARPETA DE TRABAJO
-    setwd("D:/SU/RUTA/AL/PROYECTO/PUBLICAR")
-    ```
 
-4.  Ejecute el script en su totalidad.
+---
 
-5.  Los resultados se generarán en la subcarpeta `RESULTADOS/` (esta carpeta debe existir o debe modificar la ruta de exportación).
+Cómo Ejecutar
+
+1. Verifique que todas las bibliotecas estén instaladas.
+
+
+2. Coloque el script JE4_Calculo_Ofertas_VF.R y el archivo JE4_Insumo_Oferta.RData en el mismo directorio.
+
+
+3. Actualice la ruta de trabajo en el script:
+
+# UBICAR LA CARPETA DE TRABAJO
+setwd("D:/SU/RUTA/AL/PROYECTO/PUBLICAR")
+
+
+4. Ejecute el script completo.
+
+
+5. Los resultados se generarán en la carpeta RESULTADOS/ (cree la carpeta o ajuste la ruta de exportación si es necesario).
