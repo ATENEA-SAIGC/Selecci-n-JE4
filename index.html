@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jóvenes a la E (JE4) — ¿Cómo se asignan las ofertas de programas?</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter','sans-serif'] },
+          colors: {
+            atenea: {
+              50:  '#EEF2FF',
+              100: '#E0E7FF',
+              700: '#4338CA',
+              800: '#3730A3',
+              900: '#312E81'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body { scroll-behavior: smooth; font-family: 'Inter', sans-serif; }
+    .nav-link.active { background:#E0E7FF; color:#312E81; font-weight:600; }
+    pre {
+      background:#020617;
+      color:#e5e7eb;
+      padding:1rem;
+      border-radius:.5rem;
+      overflow-x:auto;
+      font-size:.85rem;
+      line-height:1.4;
+    }
+    code.inline {
+      background:#e5e7eb;
+      color:#4338CA;
+      padding:.1rem .35rem;
+      border-radius:.35rem;
+      font-size:.9em;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+
+<!-- Encabezado -->
+<header class="bg-atenea-800 text-white p-6 shadow-lg rounded-b-2xl">
+  <div class="max-w-7xl mx-auto">
+    <p class="uppercase tracking-wide text-atenea-100 text-xs font-semibold mb-1">
+      Agencia Distrital para la Educación Superior, la Ciencia y la Tecnología – ATENEA
+    </p>
+    <h1 class="text-3xl md:text-4xl font-bold">
+      Jóvenes a la E (JE4) — ¿Cómo se asignan las ofertas de programas?
+    </h1>
+    <p class="text-atenea-100 mt-3 text-base md:text-lg max-w-3xl">
+      En esta página se explica, en lenguaje sencillo, cómo funciona el modelo JE4 que decide cuántos cupos
+      se financian en cada programa de educación superior ofertado por las instituciones de educación superior (IES).
+    </p>
+  </div>
+</header>
+
+<div class="container mx-auto max-w-7xl mt-8">
+  <div class="flex flex-col md:flex-row gap-4 md:gap-8">
+
+    <!-- Navegación lateral -->
+    <nav class="w-full md:w-1/4 px-2 md:px-0 md:sticky md:top-6 md:self-start md:h-[calc(100vh-2rem)] md:overflow-y-auto">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <h3 class="font-semibold text-gray-500 uppercase tracking-wide mb-3 text-xs">Contenido</h3>
+        <ul class="space-y-1 text-sm" id="nav-links">
+          <li><a href="#s1"  class="nav-link block px-3 py-2 rounded-md">1. ¿Qué hace el modelo JE4?</a></li>
+          <li><a href="#s2"  class="nav-link block px-3 py-2 rounded-md">2. ¿Qué entendemos por “oferta”?</a></li>
+          <li><a href="#s3"  class="nav-link block px-3 py-2 rounded-md">3. Presupuesto y bolsas de recursos</a></li>
+          <li><a href="#s4"  class="nav-link block px-3 py-2 rounded-md">4. Costos por semestre y estructura de pagos</a></li>
+          <li><a href="#s5"  class="nav-link block px-3 py-2 rounded-md">5. Costos por año (vigencias)</a></li>
+          <li><a href="#s6"  class="nav-link block px-3 py-2 rounded-md">6. Bolsas por IES y nivel (TIR ponderada)</a></li>
+          <li><a href="#s7"  class="nav-link block px-3 py-2 rounded-md">7. Ordenamiento de programas dentro de la IES</a></li>
+          <li><a href="#s8"  class="nav-link block px-3 py-2 rounded-md">8. Asignación de cupos (algoritmo)</a></li>
+          <li><a href="#s9"  class="nav-link block px-3 py-2 rounded-md">9. Resultados y salidas del modelo</a></li>
+          <li><a href="#s10" class="nav-link block px-3 py-2 rounded-md">10. Reproducibilidad y control</a></li>
+          <li><a href="#s11" class="nav-link block px-3 py-2 rounded-md">11. Preguntas frecuentes</a></li>
+          <li><a href="#s12" class="nav-link block px-3 py-2 rounded-md">12. Glosario</a></li>
+          <li><a href="#s13" class="nav-link block px-3 py-2 rounded-md">13. Notas técnicas (R)</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main class="w-full md:w-3/4 space-y-12 pb-10">
+
+      <!-- 1) Qué hace JE4 -->
+      <section id="s1" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          1) ¿Qué hace el modelo JE4?
+        </h2>
+        <p class="mb-3">
+          El modelo JE4 responde a una pregunta concreta: <strong>con el presupuesto disponible, ¿cuántos cupos se pueden financiar en cada programa que presentaron las IES?</strong>
+        </p>
+        <p class="mb-3">
+          Para hacerlo, el modelo:
+        </p>
+        <ol class="list-decimal list-inside space-y-2 text-gray-800">
+          <li>
+            Toma las <strong>ofertas de programas</strong> que enviaron las IES (nombre del programa, número de semestres, cupos, costos, etc.).
+          </li>
+          <li>
+            Calcula el <strong>costo de financiar una cohorte completa</strong> de cupos para cada programa, distribuyendo los pagos en los diferentes años
+            en que se haría el gasto (<em>vigencias</em>).
+          </li>
+          <li>
+            Organiza el <strong>presupuesto en bolsas</strong> (por tipo de programa, por IES, por nivel) y define los <strong>límites por año</strong>.
+          </li>
+          <li>
+            Recorre las ofertas en un orden definido (para que el procedimiento sea claro y repetible) y asigna cupos hasta donde
+            lo permite el presupuesto y los topes de cada vigencia.
+          </li>
+        </ol>
+
+        <div class="mt-4 bg-atenea-50 border border-atenea-100 text-atenea-900 text-sm rounded-lg p-4">
+          <p class="font-semibold mb-1">Resultado global</p>
+          <p>
+            Al finalizar, JE4 produce una tabla donde, para cada programa habilitado, se indica:
+            <strong>cuántos cupos se aprobaron</strong> y <strong>cómo se distribuye el gasto por año</strong>.
+          </p>
+        </div>
+      </section>
+
+      <!-- 2) Qué es oferta -->
+      <section id="s2" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          2) ¿Qué entendemos por “oferta” en JE4?
+        </h2>
+        <p class="mb-3">
+          En JE4, una <strong>oferta</strong> es la combinación de:
+        </p>
+        <ul class="list-disc list-inside space-y-1 text-gray-800">
+          <li>Una institución de educación superior (<strong>IES</strong>).</li>
+          <li>Un programa específico (por ejemplo, Ingeniería X, Tecnología Y).</li>
+          <li>Un nivel del programa (Universitario, Tecnológico, Técnico profesional).</li>
+          <li>Un número de <strong>cupos</strong> que la IES propone financiar por medio del programa.</li>
+          <li>Los <strong>costos por semestre</strong> para las personas beneficiarias.</li>
+        </ul>
+        <p class="mt-3 text-sm text-gray-600">
+          Antes de JE4, las ofertas ya han pasado por un proceso de verificación y están marcadas como
+          <strong>“Habilitadas”</strong>; es decir, cumplen las condiciones mínimas exigidas por la convocatoria.
+        </p>
+      </section>
+
+      <!-- 3) Presupuesto y bolsas -->
+      <section id="s3" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          3) Presupuesto y bolsas de recursos
+        </h2>
+        <p class="mb-3">
+          El punto de partida del modelo es un <strong>presupuesto general</strong> de la convocatoria. A partir de este valor se construyen varias
+          “bolsas” o subconjuntos de recursos:
+        </p>
+        <ul class="list-disc list-inside space-y-1">
+          <li>Una bolsa para el <strong>mecanismo actual</strong> (el que financia las ofertas analizadas en JE4).</li>
+          <li>Una bolsa para otros usos, como <strong>demanda social</strong>.</li>
+          <li>Dentro del mecanismo actual, una parte se reserva para <strong>programas universitarios</strong>.</li>
+          <li>Otra parte se reserva para <strong>programas técnicos y tecnológicos (TyT)</strong>.</li>
+        </ul>
+
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs md:text-sm">
+          <p class="font-semibold mb-1 text-gray-700">Ejemplo ilustrativo en R (simplificado):</p>
+          <pre><code>PPTO_GENERAL &lt;- 134411135364               # Presupuesto total (ejemplo)
+PPTO_MecanismoActual &lt;- PPTO_GENERAL * .9  # 90% al mecanismo actual
+PPTO_DemandaSocial   &lt;- PPTO_GENERAL * .1  # 10% a demanda social
+
+# Dentro del mecanismo actual:
+PPTO_UNIV &lt;- PPTO_MecanismoActual * .95    # 95% para universitarios
+PPTO_TYT  &lt;- PPTO_MecanismoActual * .05    # 5% para técnicos y tecnológicos</code></pre>
+        </div>
+
+        <p class="mt-3 text-sm text-gray-700">
+          Estas proporciones pueden ajustarse según las reglas de la convocatoria y las decisiones de política pública.
+          Lo importante es que el modelo JE4 <strong>respeta estos límites</strong> al asignar cupos.
+        </p>
+      </section>
+
+      <!-- 4) Costos por semestre / pagos -->
+      <section id="s4" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          4) Costos por semestre y estructura de pagos
+        </h2>
+        <p class="mb-3">
+          Cada programa tiene un costo por semestre. JE4 transforma esa información en una estructura de <strong>pagos</strong> que
+          permite saber cuánto se paga en cada semestre y qué proporción del pago corresponde a cada vigencia.
+        </p>
+
+        <p class="mb-2 font-semibold">Ideas clave:</p>
+        <ul class="list-disc list-inside space-y-1 text-gray-800">
+          <li>Se consideran los semestres del programa (1, 2, 3, …).</li>
+          <li>Para cada semestre se calcula un <strong>pago 1</strong> y, en algunos casos, un <strong>pago 2</strong>.</li>
+          <li>Cierta fracción (por ejemplo 80%) puede pagarse en el año en que se cursa el semestre, y otra fracción (por ejemplo 20%) se paga en una vigencia posterior.</li>
+        </ul>
+
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs md:text-sm">
+          <p class="font-semibold mb-1 text-gray-700">Fragmento ilustrativo (no ejecutable por sí solo):</p>
+          <pre><code># La tabla OFERTA_COSTO tiene columnas de costos por semestre
+OFERTA_COSTO &lt;- pivot_longer(
+  OFERTA_COSTO,
+  cols      = 5:18,                # columnas de semestres
+  names_to  = "SEMESTRE",
+  values_to = "COSTO_SEMESTRE"
+)
+
+# Se define para cada semestre la proporción del pago 1 y pago 2
+OFERTA_COSTO_EJECUCION$Pago1 &lt;- 1
+OFERTA_COSTO_EJECUCION$Pago2 &lt;- .2
+
+# En semestres pares el pago 1 es 80% y el pago 2 el 20% restante
+OFERTA_COSTO_EJECUCION[SECUENCIA_SEMESTRES %in% c(2,4,6,8,10,12),"Pago1"] &lt;- .8
+OFERTA_COSTO_EJECUCION[!(SECUENCIA_SEMESTRES %in% c(2,4,6,8,10,12)),"Pago2"] &lt;- 0
+
+# Se pasa la tabla a formato largo (Pago1 / Pago2)
+OFERTA_COSTO_EJECUCION &lt;- pivot_longer(
+  OFERTA_COSTO_EJECUCION,
+  cols      = 9:10,
+  names_to  = "NUMERO_PAGO",
+  values_to = "PORCENTAJE_PAGO"
+)</code></pre>
+        </div>
+
+        <p class="mt-3 text-sm text-gray-700">
+          El resultado de este paso es una tabla que indica, para cada programa, semestre y tipo de pago,
+          qué porcentaje del costo se paga y en qué momento.
+        </p>
+      </section>
+
+      <!-- 5) Costos por año -->
+      <section id="s5" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          5) Costos por año de ejecución (vigencias)
+        </h2>
+        <p class="mb-3">
+          A partir de la estructura de pagos por semestre, JE4 calcula cuánto se gasta en cada <strong>año</strong> (vigencia).
+          Esto es clave porque el presupuesto también tiene límites por vigencia.
+        </p>
+        <p class="mb-2">
+          En términos sencillos:
+        </p>
+        <ol class="list-decimal list-inside space-y-1 text-gray-800">
+          <li>Se identifica en qué año se ejecuta cada pago de cada semestre.</li>
+          <li>Se multiplica el costo del semestre por la proporción del pago (Pago1, Pago2, etc.).</li>
+          <li>Se suman esos valores por año para obtener el <strong>costo anual</strong> de la cohorte.</li>
+        </ol>
+
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs md:text-sm">
+          <p class="font-semibold mb-1 text-gray-700">Idea principal en pseudocódigo:</p>
+          <pre><code>OFERTA_COSTO_EJECUCION_ANUAL &lt;- OFERTA_COSTO_EJECUCION |&gt;
+  group_by(COD_IES, COD_PROGRAMA, ANIO_SEMESTRE_EJECUCION) |&gt;
+  summarise(
+    COSTO_ANUAL = sum(COSTO_SEMESTRE * PORCENTAJE_PAGO),
+    .groups = "drop"
+  )</code></pre>
+        </div>
+
+        <p class="mt-3 text-sm text-gray-700">
+          Esta tabla permite saber, para cada programa, cuánto costaría una cohorte completa por año, y así verificar que
+          la asignación de cupos no supere el presupuesto disponible en ninguna vigencia.
+        </p>
+      </section>
+
+      <!-- 6) Bolsas por IES y nivel -->
+      <section id="s6" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          6) Bolsas por IES y nivel (TIR ponderada)
+        </h2>
+        <p class="mb-3">
+          El siguiente paso es decidir <strong>qué parte del presupuesto por nivel le corresponde a cada IES</strong>.
+          Para esto se usa una medida de retorno/pertinencia de los programas, de manera agregada.
+        </p>
+        <p class="mb-2">
+          Para cada combinación <strong>IES × nivel</strong> se calcula:
+        </p>
+        <ul class="list-disc list-inside space-y-1 text-gray-800">
+          <li>La suma de un indicador de retorno (por ejemplo, la <strong>TIR del programa</strong>).</li>
+          <li>La participación de cada programa en esa suma.</li>
+        </ul>
+
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs md:text-sm">
+          <p class="font-semibold mb-1 text-gray-700">Fragmento ilustrativo de la TIR ponderada:</p>
+          <pre><code># Agrupación por IES y nivel
+TIR_PONDERADA &lt;- OFERTA_GENERAL |&gt;
+  group_by(COD_IES, NIVEL_PROGRAMA_SNIES_AJUSTE) |&gt;
+  summarise(TOTAL_TIR_IES_NIVEL = sum(TIR_PROGRAMA),
+            .groups = "drop")
+
+OFERTA_GENERAL &lt;- merge(
+  OFERTA_GENERAL,
+  TIR_PONDERADA,
+  by = c("COD_IES","NIVEL_PROGRAMA_SNIES_AJUSTE")
+)
+
+OFERTA_GENERAL$TIR_PARTICIPACION &lt;- OFERTA_GENERAL$TIR_PROGRAMA /
+  OFERTA_GENERAL$TOTAL_TIR_IES_NIVEL</code></pre>
+        </div>
+
+        <p class="mt-3 text-sm text-gray-700">
+          Con esta información, la bolsa de presupuesto para cada IES×nivel se reparte entre sus programas
+          de manera proporcional a la participación de su TIR.
+        </p>
+      </section>
+
+      <!-- 7) Ordenamiento programas -->
+      <section id="s7" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          7) Ordenamiento de programas dentro de cada IES
+        </h2>
+        <p class="mb-3">
+          Dentro de cada IES×nivel, los programas se recorren siguiendo un orden que se define con criterios
+          de calidad, costo y capacidad. Esto es importante para que la asignación sea <strong>consistente y reproducible</strong>.
+        </p>
+        <p class="mb-2">En términos generales, el orden se basa en:</p>
+        <ol class="list-decimal list-inside space-y-1 text-gray-800">
+          <li>Un indicador de calidad/pertinencia del programa (por ejemplo, <strong>ISOES</strong>, de mayor a menor).</li>
+          <li>El <strong>costo de la cohorte</strong> (por ejemplo, menor costo primero, si se busca eficiencia).</li>
+          <li>El <strong>número de cupos</strong> ofertados.</li>
+          <li>Un desempate aleatorio controlado mediante una semilla fija (<code class="inline">set.seed()</code>).</li>
+        </ol>
+
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs md:text-sm">
+          <p class="font-semibold mb-1 text-gray-700">Ejemplo de ordenamiento (simplificado):</p>
+          <pre><code>set.seed(20251010)  # Semilla para desempates reproducibles
+
+ORDENAMIENTO_PROG &lt;- OFERTA_GENERAL |&gt;
+  arrange(
+    COD_IES,
+    NIVEL_PROGRAMA_SNIES_AJUSTE,
+    desc(ISOES_PROGRAMA),
+    TOTAL_VALOR_COHORTE_ATENEA,    # costo de cohorte
+    desc(CUPOS_SEGUN_CAPACIDAD),   # más cupos primero
+    SEMILLA                        # desempate aleatorio
+  )</code></pre>
+        </div>
+      </section>
+
+      <!-- 8) Asignación de cupos -->
+      <section id="s8" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          8) Asignación de cupos: recorrido del algoritmo
+        </h2>
+        <p class="mb-3">
+          Una vez definido el orden, el modelo JE4 recorre los programas de cada IES×nivel y decide cuántos cupos
+          se pueden aprobar, respetando tanto la bolsa global de la IES×nivel como los <strong>topes anuales de gasto</strong>.
+        </p>
+
+        <p class="mb-2 font-semibold">Esquema conceptual:</p>
+        <ol class="list-decimal list-inside space-y-2 text-gray-800">
+          <li>
+            Para la IES×nivel se define un <strong>valor disponible</strong> de presupuesto (<code class="inline">VALOR_IES</code>).
+          </li>
+          <li>
+            Para cada programa (en el orden definido), se calcula el <strong>cupo máximo teórico</strong> que permitiría ese presupuesto:
+            <code class="inline">CUPO_CALCULADO = VALOR_IES / TOTAL_VALOR_COHORTE_ATENEA</code>.
+          </li>
+          <li>
+            Se compara ese cupo con los <strong>cupos ofertados</strong> por la IES y con los <strong>topes por vigencia</strong>.
+          </li>
+          <li>
+            Se aprueba el número de cupos que cumple las reglas sin exceder el presupuesto en ningún año.
+          </li>
+          <li>
+            Se descuenta el costo de esos cupos del presupuesto disponible y se avanza al siguiente programa.
+          </li>
+        </ol>
+
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs md:text-sm">
+          <p class="font-semibold mb-1 text-gray-700">Pseudocódigo simplificado del recorrido:</p>
+          <pre><code>for cada (COD_IES, NIVEL) {
+  valor_disponible &lt;- PPTO_IES_NIVEL
+
+  for cada PROGRAMA en orden_ies_nivel {
+    costo_cohorte &lt;- TOTAL_VALOR_COHORTE_ATENEA
+
+    # Cupo máximo por presupuesto
+    CUPO_CALCULADO &lt;- floor(valor_disponible / costo_cohorte)
+
+    # Cupo máximo permitido por vigencias (mínimo por año)
+    CUPO_VIG_MIN &lt;- min(CUPOS_ANIO)   # derivado de OFERTA_COSTO_EJECUCION_ANUAL
+
+    # Cupo ofertado por la IES
+    CUPO_OFERTADO &lt;- CUPOS_SEGUN_CAPACIDAD
+
+    # Se aplica la regla de decisión (ejemplo):
+    cupo_aprobado &lt;- min(CUPO_CALCULADO, CUPO_OFERTADO, CUPO_VIG_MIN)
+
+    if (cupo_aprobado &gt; 0) {
+      costo_total_programa &lt;- cupo_aprobado * costo_cohorte
+      valor_disponible &lt;- valor_disponible - costo_total_programa
+      registrar_aprobacion(PROGRAMA, cupo_aprobado, costo_total_programa)
+    }
+  }
+}</code></pre>
+        </div>
+
+        <p class="mt-3 text-sm text-gray-700">
+          Las reglas reales son más detalladas y contemplan casos particulares (por ejemplo, programas con costos en vigencias
+          muy futuras), pero la idea central es siempre: <strong>no superar el presupuesto disponible ni los topes por año</strong>.
+        </p>
+      </section>
+
+      <!-- 9) Resultados -->
+      <section id="s9" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          9) Resultados y salidas del modelo JE4
+        </h2>
+        <p class="mb-3">
+          Al finalizar la ejecución, el modelo JE4 produce, para cada programa habilitado:
+        </p>
+        <ul class="list-disc list-inside space-y-1 text-gray-800">
+          <li>El <strong>número de cupos aprobados</strong>.</li>
+          <li>El <strong>costo total</strong> asociado a esos cupos.</li>
+          <li>La <strong>distribución del gasto por vigencia</strong> (año a año).</li>
+        </ul>
+        <p class="mt-3 text-sm text-gray-700">
+          Estos resultados se consolidan en tablas y reportes que sirven tanto para la gestión interna como para la
+          publicación de información a la ciudadanía, garantizando <strong>trazabilidad y transparencia</strong>.
+        </p>
+      </section>
+
+      <!-- 10) Reproducibilidad -->
+      <section id="s10" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          10) Reproducibilidad y control del proceso
+        </h2>
+        <p class="mb-3">
+          El modelo JE4 está implementado en <strong>R</strong>, utilizando principalmente los paquetes
+          <code class="inline">dplyr</code>, <code class="inline">tidyr</code>, <code class="inline">readxl</code> y
+          <code class="inline">sqldf</code>, entre otros.
+        </p>
+        <p class="mb-2">Para garantizar reproducibilidad se aplican varias prácticas:</p>
+        <ul class="list-disc list-inside space-y-1 text-gray-800">
+          <li>Uso de semillas fijas (<code class="inline">set.seed()</code>) para cualquier componente aleatorio (por ejemplo, desempates).</li>
+          <li>Control de versiones del código y de los insumos (archivos de oferta, costos y parámetros).</li>
+          <li>Conservación de los parámetros clave (presupuesto, proporciones, fechas) en archivos de configuración.</li>
+        </ul>
+      </section>
+
+      <!-- 11) FAQ -->
+      <section id="s11" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          11) Preguntas frecuentes
+        </h2>
+
+        <details class="mb-3 p-4 bg-atenea-50 border border-atenea-100 rounded-lg">
+          <summary class="font-semibold text-atenea-900">
+            ¿Por qué un programa puede recibir menos cupos de los que ofertó la IES?
+          </summary>
+          <p class="mt-2 text-sm text-atenea-900">
+            Porque el modelo JE4 debe respetar el presupuesto disponible y los topes por vigencia. Si financiar todos
+            los cupos ofertados supera alguno de esos límites, solo se aprueba el número de cupos que sí se puede financiar
+            sin exceder el presupuesto.
+          </p>
+        </details>
+
+        <details class="mb-3 p-4 bg-atenea-50 border border-atenea-100 rounded-lg">
+          <summary class="font-semibold text-atenea-900">
+            ¿Cómo se decide el orden en que se revisan los programas?
+          </summary>
+          <p class="mt-2 text-sm text-atenea-900">
+            El orden se define con reglas fijas basadas en calidad, pertinencia y costo (por ejemplo, un indicador como ISOES
+            y la TIR ponderada). Cuando hay empates se utilizan semillas aleatorias controladas, para que el mismo código
+            siempre produzca el mismo resultado.
+          </p>
+        </details>
+
+        <details class="mb-3 p-4 bg-atenea-50 border border-atenea-100 rounded-lg">
+          <summary class="font-semibold text-atenea-900">
+            ¿Es posible replicar los resultados fuera de la Agencia?
+          </summary>
+          <p class="mt-2 text-sm text-atenea-900">
+            En principio sí: con acceso al mismo código, los mismos insumos y los mismos parámetros (por ejemplo, presupuesto
+            y semillas), se pueden reproducir los resultados paso a paso. Por motivos de protección de datos y licencias,
+            algunos insumos solo pueden circular en entornos controlados.
+          </p>
+        </details>
+      </section>
+
+      <!-- 12) Glosario -->
+      <section id="s12" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          12) Glosario
+        </h2>
+        <ul class="list-disc list-inside space-y-1 text-gray-800">
+          <li><strong>IES</strong>: Institución de Educación Superior.</li>
+          <li><strong>Cohorte</strong>: grupo de cupos de un programa que se financian en una misma “oleada”.</li>
+          <li><strong>Vigencia</strong>: año fiscal en el que se ejecuta un gasto público.</li>
+          <li><strong>Cupo</strong>: oportunidad de matrícula financiada para una persona en un programa específico.</li>
+          <li><strong>ISOES</strong>: indicador que resume información sobre calidad y oportunidades de educación superior.</li>
+          <li><strong>TIR de programa</strong>: medida de retorno asociada al programa (usada para ponderar la asignación de recursos).</li>
+        </ul>
+      </section>
+
+      <!-- 13) Notas técnicas -->
+      <section id="s13" class="scroll-mt-24">
+        <h2 class="text-2xl md:text-3xl font-bold text-atenea-900 mb-3 border-b border-atenea-100 pb-2">
+          13) Notas técnicas (para personas que usan R)
+        </h2>
+        <p class="mb-3 text-gray-800">
+          El modelo JE4 se implementa en un script en <strong>R</strong> que:
+        </p>
+        <ul class="list-disc list-inside space-y-1 text-gray-800 mb-3">
+          <li>Lee y depura los archivos de oferta (<code class="inline">LISTADO_OFERTA_PROPUESTA</code> y relacionados).</li>
+          <li>Construye tablas de costos por semestre, pagos y vigencias.</li>
+          <li>Define bolsas de presupuesto por nivel e IES.</li>
+          <li>Ordena y recorre programas, actualizando cupos y presupuestos.</li>
+        </ul>
+
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs md:text-sm">
+          <p class="font-semibold mb-1 text-gray-700">Paquetes principales:</p>
+          <pre><code>library(dplyr)
+library(tidyr)
+library(readxl)
+library(readr)
+library(sqldf)</code></pre>
+        </div>
+
+        <p class="mt-3 text-sm text-gray-600">
+          Los detalles de implementación, consultas SQL y estructuras intermedias se documentan en los anexos técnicos y
+          en el propio código fuente de JE4, dirigidos a equipos técnicos que necesiten auditar o extender el modelo.
+        </p>
+      </section>
+      <section id="s14" class="scroll-mt-20">
+<h2 class="text-3xl font-bold text-indigo-900 mb-4 border-b border-indigo-100 pb-2">14) Licencia y contacto</h2>
+<p>El código y la construcción de indicadores fueron desarrollados por la Agencia Distrital para la Educación Superior, la Ciencia y la Tecnología – ATENEA.
+Este material se distribuye bajo la licencia Creative Commons Attribution 4.0 International (CC BY 4.0), en concordancia con la <a class="text-indigo-700 underline" href="https://agenciaatenea.gov.co/sites/default/files/2024-10/po2_de_politica_de_derechos_de_autor._v1_0.pdf" target="_blank" rel="noopener">Política de Derechos de Autor y Uso de Datos de ATENEA</a>.
+El código y la construcción de indicadores fueron desarrollados por la Agencia Distrital para la Educación Superior, la Ciencia y la Tecnología – ATENEA. El material se distribuye bajo la licencia. Al reproducir o adaptar el material, se debe citar a la Agencia Distrital para la Educación Superior, la Ciencia y la Tecnología – ATENEA como fuente.</p>
+<p>Este material explica a alto nivel el proceso de selección de ofertas de programas de JE4 – Bogotá, con base en el <a class="text-indigo-700 underline" href="https://github.com/ATENEA-SAIGC/Selecci-n-JE4/blob/main/JE4_Calculo_Ofertas_VF.R" target="_blank" rel="noopener">script operativo en R</a>. Para consultas remitirse a <a class="text-indigo-700 underline" href="https://www.agenciaatenea.gov.co/atencion-y-servicios-la-ciudadania" target="_blank" rel="noopener">Agencia Atenea</a>.</p>
+</section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Script para resaltar sección activa en el menú -->
+<script>
+  const navLinks = Array.from(document.querySelectorAll('.nav-link'));
+  const sections = navLinks.map(link => document.querySelector(link.getAttribute('href')));
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const index = sections.indexOf(entry.target);
+      if (index >= 0) {
+        if (entry.isIntersecting) {
+          navLinks[index].classList.add('active');
+        } else {
+          navLinks[index].classList.remove('active');
+        }
+      }
+    });
+  }, {
+    rootMargin: '-40% 0px -50% 0px',
+    threshold: 0.1
+  });
+
+  sections.forEach(section => {
+    if (section) observer.observe(section);
+  });
+</script>
+
+</body>
+</html>
